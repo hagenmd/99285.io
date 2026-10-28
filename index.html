@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>99285.io — ED MDM documentation check</title>
+<meta name="description" content="Paste ED medical decision making and see which visit level the documentation supports, with the evidence for each element.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🩺</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F5F6; --surface:#FFFFFF; --ink:#17232B; --muted:#5B6B75; --rule:#D5DCE0;
+  --accent:#1F5F7A; --accent-ink:#FFFFFF; --soft:#E3EEF3; --warn:#8A5300; --warn-bg:#FBF1E1;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#10171C; --surface:#162027; --ink:#E3EAEE; --muted:#93A3AD; --rule:#2A363E;
+    --accent:#6FB3CF; --accent-ink:#0C1418; --soft:#1C2E37; --warn:#E8B565; --warn-bg:#2B2215;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--paper); color:var(--ink);
+  font:400 16px/1.55 "Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);
+}
+.wrap{max-width:1180px;margin:0 auto;padding:32px 24px 64px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 20px;margin-bottom:28px}
+header h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:0}
+header p{margin:0;color:var(--muted);max-width:60ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:28px;align-items:start}
+@media (max-width:880px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:20px}
+label.big{display:block;font-weight:600;margin-bottom:8px}
+textarea{
+  width:100%;min-height:340px;resize:vertical;padding:14px;border:1px solid var(--rule);border-radius:6px;
+  background:var(--paper);color:var(--ink);font:400 15px/1.5 "Public Sans",system-ui,sans-serif;
+}
+textarea:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+button{font:600 15px "Public Sans",system-ui,sans-serif;border-radius:6px;padding:10px 18px;cursor:pointer;border:1px solid var(--accent)}
+.primary{background:var(--accent);color:var(--accent-ink)}
+.primary[disabled]{opacity:.55;cursor:progress}
+.ghost{background:transparent;color:var(--accent)}
+.count{margin-left:auto;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.notice{font-size:13px;color:var(--muted);margin:14px 0 0}
+
+/* the level scale */
+.scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:4px 0 6px}
+.step{border:1px solid var(--rule);border-radius:6px;padding:12px 4px 10px;text-align:center;font-variant-numeric:tabular-nums}
+.step b{display:block;font-size:clamp(17px,2.4vw,24px);font-weight:700;letter-spacing:-.01em}
+.step span{font-size:12px;color:var(--muted)}
+.step.na{opacity:.45}
+@media (max-width:520px){.step span{display:none}.step{padding:10px 2px}.step b{font-size:15px}.wrap{padding:24px 16px 48px}}
+.step.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.step.on span{color:var(--accent-ink)}
+.verdict{margin:14px 0 18px;font-size:15px}
+.empty{color:var(--muted);text-align:center;padding:40px 12px}
+
+.el{border-top:1px solid var(--rule);padding:14px 0}
+.el-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.el-head h3{margin:0;font-size:16px}
+.pips{display:flex;gap:3px}
+.pip{width:22px;height:8px;border-radius:2px;background:var(--rule)}
+.pip.on{background:var(--accent)}
+.el-label{font-weight:600}
+.el > p{margin:4px 0 0}
+.basis{color:var(--muted);margin:4px 0 0;font-size:14px}
+details{margin-top:6px}
+summary{cursor:pointer;color:var(--accent);font-size:14px;font-weight:600}
+ul.ev{margin:8px 0 0;padding-left:18px;font-size:14px}
+ul.ev li{margin:4px 0}
+q{font-style:italic}
+.counts{font-size:14px;margin:6px 0 0;color:var(--muted)}
+.gaps{background:var(--soft);border-radius:8px;padding:14px 16px;margin-top:8px}
+.gaps h3{margin:0 0 6px;font-size:16px}
+.gaps ul{margin:0;padding-left:18px}
+.warn{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:14px}
+.err{color:var(--warn);margin-top:10px}
+footer{margin-top:40px;color:var(--muted);font-size:13px;max-width:80ch}
+@media (prefers-reduced-motion:no-preference){.step.on{transition:background .25s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>99285.io</h1>
+    <p>Paste your ED medical decision making. See which level the documentation supports, the evidence for each element, and what’s missing from the note.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="in-label">
+      <label class="big" id="in-label" for="note">MDM text</label>
+      <textarea id="note" placeholder="Synthetic or fully de-identified text only."></textarea>
+      <div class="row">
+        <button class="primary" id="go">Check documentation</button>
+        <button class="ghost" id="example" type="button">Load example</button>
+        <span class="count" id="count">0 / 12,000</span>
+      </div>
+      <p class="notice">Don’t paste patient identifiers. Text is sent to an AI model for analysis and isn’t stored by this site.</p>
+      <div class="err" id="err" role="alert"></div>
+    </section>
+
+    <section class="panel" aria-live="polite" id="out">
+      <div class="scale" id="scale"></div>
+      <div id="result"><p class="empty">Results appear here after you check a note.</p></div>
+    </section>
+  </div>
+
+  <footer>
+    Educational tool for clinicians. It is not coding, billing, or legal advice, and its output should be checked against your organization’s coding policies. Levels follow the 2023 AMA ED E/M framework, where the level is set by medical decision making; 99281 is not shown as an outcome because it doesn’t require MDM. CPT® is a registered trademark of the American Medical Association. This site is not affiliated with the AMA.
+  </footer>
+</div>
+
+<script>
+const CODES = ["99281","99282","99283","99284","99285"];
+const MDM = ["N/A","Straightforward","Low","Moderate","High"];
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function drawScale(active){
+  $("scale").innerHTML = CODES.map((c,i)=>
+    `<div class="step${i===0?" na":""}${i===active?" on":""}"><b>${c}</b><span>${MDM[i]}</span></div>`).join("");
+}
+drawScale(-1);
+
+$("note").addEventListener("input", e => { $("count").textContent = `${e.target.value.length.toLocaleString()} / 12,000`; });
+
+$("example").addEventListener("click", () => {
+  $("note").value = `58M with history of HTN and DM2 presenting with 2 hours of substernal chest pressure radiating to the left arm with diaphoresis. Wife at bedside provides additional history as patient is a poor historian due to anxiety.
+
+Differential includes ACS, aortic dissection, PE, pneumothorax, GERD. Ordered CBC, BMP, troponin x2, chest x-ray, and ECG. My interpretation of the ECG: sinus rhythm at 88, 1 mm ST depressions in V4–V6, no ST elevation. Reviewed outside hospital records from Baptist Health showing a stress test 2 years ago with a small fixed defect. Initial troponin 0.08, repeat 0.21. CXR without widened mediastinum or pneumothorax.
+
+Treated with aspirin 324 mg, nitroglycerin, and heparin drip. Discussed with Dr. Lee (cardiology), who agrees with NSTEMI management and will see the patient for catheterization in the morning. Decision made to admit to the cardiac step-down unit.`;
+  $("note").dispatchEvent(new Event("input"));
+});
+
+function pips(rank){ return `<div class="pips" aria-hidden="true">${[0,1,2,3].map(i=>`<div class="pip${i<=rank?" on":""}"></div>`).join("")}</div>`; }
+function quotes(list){ return list && list.length ? `<ul class="ev">${list.map(q=>`<li><q>${esc(q)}</q></li>`).join("")}</ul>` : `<p class="basis">No supporting text found.</p>`; }
+
+function render(r){
+  drawScale(r.level.rank + 1);
+  const e = r.elements, d = e.data, items = d.items;
+  const dataEv = [
+    ...items.tests.map(t=>`Test: ${t.name} — “${t.evidence}”`),
+    ...items.external_notes.map(t=>`External records: ${t.source} — “${t.evidence}”`),
+    ...(items.independent_historian?.present ? [`Independent historian — “${items.independent_historian.evidence||""}”`] : []),
+    ...items.independent_interpretations.map(t=>`Independent interpretation: ${t.test} — “${t.evidence}”`),
+    ...items.external_discussions.map(t=>`Discussion: ${t.with_whom} — “${t.evidence}”`)
+  ];
+  const c = d.counts;
+  $("result").innerHTML = `
+    ${r.phi_suspected ? `<div class="warn">This text may contain patient identifiers. Remove them before pasting notes here.</div>` : ""}
+    <p class="verdict">Documentation supports <strong>${r.level.code}</strong> (${r.level.mdm.toLowerCase()} MDM). The level is set by the element in the middle: two of three must meet or exceed it.</p>
+
+    <div class="el">
+      <div class="el-head"><h3>Problems addressed</h3>${pips(e.problems.rank)}</div>
+      <p><span class="el-label">${e.problems.label}</span></p>
+      <p class="basis">${esc(e.problems.basis)}</p>
+      <details><summary>Evidence</summary>${quotes(e.problems.evidence)}</details>
+    </div>
+
+    <div class="el">
+      <div class="el-head"><h3>Data reviewed and analyzed</h3>${pips(d.rank)}</div>
+      <p><span class="el-label">${d.label}</span></p>
+      <p class="counts">${c.tests} unique test${c.tests===1?"":"s"}, ${c.external_notes} external source${c.external_notes===1?"":"s"}${c.independent_historian?", independent historian":""}, ${c.independent_interpretations} independent interpretation${c.independent_interpretations===1?"":"s"}, ${c.external_discussions} external discussion${c.external_discussions===1?"":"s"}</p>
+      <details><summary>Evidence</summary>${dataEv.length?`<ul class="ev">${dataEv.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:`<p class="basis">No data items found.</p>`}</details>
+    </div>
+
+    <div class="el">
+      <div class="el-head"><h3>Risk of patient management</h3>${pips(e.risk.rank)}</div>
+      <p><span class="el-label">${e.risk.label}</span></p>
+      <p class="basis">${esc(e.risk.basis)}</p>
+      <details><summary>Evidence</summary>${quotes(e.risk.evidence)}</details>
+    </div>
+
+    ${r.gaps.length ? `<div class="gaps"><h3>Missing from the documentation</h3><ul>${r.gaps.map(g=>`<li>${esc(g)}</li>`).join("")}</ul></div>` : ""}
+  `;
+}
+
+$("go").addEventListener("click", async () => {
+  const note = $("note").value.trim();
+  $("err").textContent = "";
+  if (note.length < 40) { $("err").textContent = "Paste at least a few sentences of MDM."; return; }
+  const btn = $("go"); btn.disabled = true; btn.textContent = "Checking…";
+  try {
+    const res = await fetch("/api/analyze", { method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({ note }) });
+    const json = await res.json().catch(()=>({}));
+    if (!res.ok) throw new Error(json.error || `Request failed (${res.status}).`);
+    render(json);
+  } catch (e) {
+    $("err").textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = "Check documentation";
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "99285-io",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server-local.js",
+    "test": "node eval/scoring.test.js",
+    "eval": "node eval/run.js eval/vignettes.jsonl"
+  },
+  "engines": { "node": ">=18" }
+}
